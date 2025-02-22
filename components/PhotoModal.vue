@@ -98,13 +98,12 @@ const endTouch = (event) => {
       </sub>
 
       <transition :name="transitionName" mode="out-in">
-        <NuxtImg
+        <img
           :key="photoStore.selectedPhoto.id"
           :src="photoStore.selectedPhoto.urls.regular"
           :alt="photoStore.selectedPhoto.description"
           class="object-contain max-w-auto max-h-[90%] m-auto cursor-zoom-out"
           @click="closeModal"
-          loading="lazy"
         />
       </transition>
     </div>

@@ -18,11 +18,10 @@ const openModal = () => {
       class="absolute inset-0 rounded-lg bg-black bg-opacity-40 cursor-zoom-in opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     ></div>
 
-    <NuxtImg
+    <img
       :src="photo.urls.small"
       :alt="photo.description"
       class="w-full h-auto object-cover rounded-lg"
-      loading="lazy"
     />
 
     <div
