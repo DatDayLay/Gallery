@@ -55,7 +55,7 @@ const performSearch = () => {
     >
       {{
         photoStore.loading
-          ? `Searching for "${lastSearchedQuery}"...`
+          ? `Searching for "${lastSearchedQuery}"`
           : `Search results for "${lastSearchedQuery}"`
       }}
     </p>

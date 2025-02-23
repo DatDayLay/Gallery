@@ -1,45 +1,80 @@
 <script setup>
 import { usePhotoStore } from "../store/photostore";
 
+import { debounce } from "lodash";
+
 const photoStore = usePhotoStore();
-const transitionName = ref("slide-right"); // Default transition
+const transitionName = ref("slide-right");
 const touchStartX = ref(0);
 const touchEndX = ref(0);
+const isFullScreen = ref(false);
+
+const toggleFullScreen = () => {
+  isFullScreen.value = !isFullScreen.value;
+};
 
 const closeModal = () => {
   photoStore.clearSelectedPhoto();
 };
 
-// Move next (slide left)
 const nextPhoto = () => {
-  transitionName.value = "slide-left";
-  photoStore.nextPhoto();
-};
-
-// Move previous (slide right)
-const prevPhoto = () => {
-  transitionName.value = "slide-right";
-  photoStore.prevPhoto();
-};
-
-// Capture touch start position
-const startTouch = (event) => {
-  touchStartX.value = event.touches[0].clientX;
-};
-
-// Capture touch end position and determine swipe direction
-const endTouch = (event) => {
-  touchEndX.value = event.changedTouches[0].clientX;
-  const diff = touchStartX.value - touchEndX.value;
-
-  if (diff > 50) {
-    // Swiped left (next photo)
-    nextPhoto();
-  } else if (diff < -50) {
-    // Swiped right (previous photo)
-    prevPhoto();
+  if (!isFullScreen.value) {
+    transitionName.value = "slide-left";
+    photoStore.nextPhoto();
   }
 };
+
+const prevPhoto = () => {
+  if (!isFullScreen.value) {
+    transitionName.value = "slide-right";
+    photoStore.prevPhoto();
+  }
+};
+
+// Capture Touch Start Position
+const startTouch = (event) => {
+  if (!isFullScreen.value) {
+    touchStartX.value = event.touches[0].clientX;
+  }
+};
+
+// Capture Touch End Position & Detect Swipe Direction
+const endTouch = (event) => {
+  if (!isFullScreen.value) {
+    touchEndX.value = event.changedTouches[0].clientX;
+    const swipeThreshold = window.innerWidth * 0.1;
+    const diff = touchStartX.value - touchEndX.value;
+
+    handleSwipe(diff, swipeThreshold);
+  }
+};
+
+// Debounced Swipe Handling
+const handleSwipe = debounce((diff, threshold) => {
+  if (!isFullScreen.value) {
+    if (diff > threshold) nextPhoto(); // Swiped left
+    else if (diff < -threshold) prevPhoto(); // Swiped right
+  }
+}, 200);
+
+const handleKeyPress = (event) => {
+  if (isFullScreen.value) {
+    if (event.key === "Escape") toggleFullScreen();
+    return;
+  }
+
+  if (event.key === "ArrowRight") nextPhoto();
+  if (event.key === "ArrowLeft") prevPhoto();
+  if (event.key === "Escape") closeModal();
+};
+
+onMounted(() => {
+  window.addEventListener("keydown", handleKeyPress);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeyPress);
+});
 </script>
 
 <template>
@@ -64,9 +99,9 @@ const endTouch = (event) => {
     </button>
 
     <div
-      class="relative bg-white w-[80%] h-[90%] max-w-[90%] max-h-[80%] sm:w-[65%] sm:h-[95%] flex flex-col rounded-lg"
+      class="relative bg-white w-[80%] h-[90%] max-w-[90%] max-h-[80%] p-2 sm:w-[65%] sm:h-[95%] flex flex-col rounded-lg"
     >
-      <sub class="w-[98%] mx-auto flex justify-between">
+      <sub class="w-[98%] mx-auto flex justify-between p-[0.5%]">
         <aside class="flex flex-col p-1">
           <h4 class="font-Karla text-black text-base font-semibold">
             {{ photoStore.selectedPhoto.user.name }}
@@ -96,14 +131,15 @@ const endTouch = (event) => {
           </span>
         </aside>
       </sub>
-
       <transition :name="transitionName" mode="out-in">
         <img
           :key="photoStore.selectedPhoto.id"
           :src="photoStore.selectedPhoto.urls.regular"
           :alt="photoStore.selectedPhoto.description"
-          class="object-contain max-w-auto max-h-[90%] m-auto cursor-zoom-out"
-          @click="closeModal"
+          class="object-contain max-w-auto max-h-[90%] m-auto cursor-zoom-in"
+          :class="{ 'fullscreen-image': isFullScreen }"
+          @click="toggleFullScreen"
+          loading="lazy"
         />
       </transition>
     </div>
@@ -114,12 +150,25 @@ const endTouch = (event) => {
     >
       &gt;
     </button>
+
+    <transition name="fullscreen">
+      <div
+        v-if="isFullScreen"
+        class="fullscreen-wrapper"
+        @click="toggleFullScreen"
+      >
+        <img
+          :src="photoStore.selectedPhoto.urls.full"
+          :alt="photoStore.selectedPhoto.description"
+          class="fullscreen-image"
+        />
+      </div>
+    </transition>
   </div>
 </template>
+<!-- Opted for an individual component styling for the animation cuz this is the only place i'll require it and it's not a large project, libraries felt a bit like overkill. Also just wanted to flex i could get things sorted out libraries or not ;) -->
 
-<!-- Opted for an individual component styling for the animation cuz this is the only place i'll require it and it's not a large project, Using swiperjs or another library felt a bit like overkill -->
 <style>
-/* Slide left (Next) */
 .slide-left-enter-active,
 .slide-left-leave-active {
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -127,15 +176,14 @@ const endTouch = (event) => {
 
 .slide-left-enter-from {
   opacity: 0;
-  transform: translateX(5px);
+  transform: translateX(20px);
 }
 
 .slide-left-leave-to {
   opacity: 0;
-  transform: translateX(-5px);
+  transform: translateX(-20px);
 }
 
-/* Slide right (Previous) */
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition: opacity 0.5s ease, transform 0.5s ease;
@@ -143,11 +191,46 @@ const endTouch = (event) => {
 
 .slide-right-enter-from {
   opacity: 0;
-  transform: translateX(-5px);
+  transform: translateX(-20px);
 }
 
 .slide-right-leave-to {
   opacity: 0;
-  transform: translateX(5px);
+  transform: translateX(20px);
+}
+
+.fullscreen-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.fullscreen-image {
+  width: 100vw;
+  height: 95vh;
+  object-fit: contain;
+  cursor: zoom-out;
+}
+
+.fullscreen-enter-active,
+.fullscreen-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fullscreen-enter-from {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.fullscreen-leave-to {
+  opacity: 0;
+  transform: scale(1.1);
 }
 </style>
