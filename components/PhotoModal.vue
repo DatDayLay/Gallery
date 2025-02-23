@@ -1,8 +1,6 @@
 <script setup>
 import { usePhotoStore } from "../store/photostore";
 
-import { debounce } from "lodash";
-
 const photoStore = usePhotoStore();
 const transitionName = ref("slide-right");
 const touchStartX = ref(0);
@@ -42,20 +40,16 @@ const startTouch = (event) => {
 const endTouch = (event) => {
   if (!isFullScreen.value) {
     touchEndX.value = event.changedTouches[0].clientX;
-    const swipeThreshold = window.innerWidth * 0.1;
     const diff = touchStartX.value - touchEndX.value;
+    const swipeThreshold = window.innerWidth * 0.1; // 10% of screen width
 
-    handleSwipe(diff, swipeThreshold);
+    if (diff > swipeThreshold) {
+      nextPhoto(); // Swiped left
+    } else if (diff < -swipeThreshold) {
+      prevPhoto(); // Swiped right
+    }
   }
 };
-
-// Debounced Swipe Handling
-const handleSwipe = debounce((diff, threshold) => {
-  if (!isFullScreen.value) {
-    if (diff > threshold) nextPhoto(); // Swiped left
-    else if (diff < -threshold) prevPhoto(); // Swiped right
-  }
-}, 200);
 
 const handleKeyPress = (event) => {
   if (isFullScreen.value) {

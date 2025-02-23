@@ -13,7 +13,7 @@ const emits = defineEmits(["click"]);
     <div
       class="absolute inset-0 rounded-lg bg-black bg-opacity-40 cursor-zoom-in opacity-0 group-hover:opacity-100 transition-opacity duration-300"
     ></div>
-    <!-- tried using nuxt/image but was running into errors with production so went ahead with regular img -->
+    <!-- tried using nuxt/image it worked locally but was running into errors with production so went ahead with regular img -->
     <img
       :src="photo.urls.small"
       :alt="photo.description"
