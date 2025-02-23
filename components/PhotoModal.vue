@@ -29,24 +29,22 @@ const prevPhoto = () => {
   }
 };
 
-// Capture Touch Start Position
 const startTouch = (event) => {
   if (!isFullScreen.value) {
     touchStartX.value = event.touches[0].clientX;
   }
 };
 
-// Capture Touch End Position & Detect Swipe Direction
 const endTouch = (event) => {
   if (!isFullScreen.value) {
     touchEndX.value = event.changedTouches[0].clientX;
     const diff = touchStartX.value - touchEndX.value;
-    const swipeThreshold = window.innerWidth * 0.1; // 10% of screen width
+    const swipeThreshold = window.innerWidth * 0.1;
 
     if (diff > swipeThreshold) {
-      nextPhoto(); // Swiped left
+      nextPhoto();
     } else if (diff < -swipeThreshold) {
-      prevPhoto(); // Swiped right
+      prevPhoto();
     }
   }
 };
