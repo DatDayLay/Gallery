@@ -2,6 +2,7 @@
 import { usePhotoStore } from "../store/photostore";
 
 const photoStore = usePhotoStore();
+const { toggleFavorite, isFavorite } = photoStore;
 const transitionName = ref("slide-right");
 const touchStartX = ref(0);
 const touchEndX = ref(0);
@@ -93,7 +94,7 @@ onUnmounted(() => {
     <div
       class="relative bg-white w-[80%] h-[90%] max-w-[90%] max-h-[80%] p-2 sm:w-[65%] sm:h-[95%] flex flex-col rounded-lg"
     >
-      <sub class="w-[98%] mx-auto flex justify-between p-[0.5%]">
+      <sub class="w-[100%] mx-auto flex justify-between p-[0.5%]">
         <aside class="flex flex-col p-1">
           <h4 class="font-Karla text-black text-base font-semibold">
             {{ photoStore.selectedPhoto.user.name }}
@@ -104,16 +105,31 @@ onUnmounted(() => {
         </aside>
         <aside class="flex p-1">
           <span
-            class="group w-fit bg-slate-200 shadow-sm justify-center cursor-pointer mr-2 items-center sm:p-3 p-2 rounded-md hover:bg-black"
+            class="group w-fit h-fit shadow-sm justify-center cursor-pointer mr-2 items-center sm:p-3 p-2 rounded-md"
+            :class="{
+              'bg-red-300 hover:bg-red-300': isFavorite(
+                photoStore.selectedPhoto.id
+              ),
+              'bg-slate-200 hover:bg-slate-100': !isFavorite(
+                photoStore.selectedPhoto.id
+              ),
+            }"
+            @click.stop="toggleFavorite(photoStore.selectedPhoto.id)"
           >
             <Icon
               name="fa-solid:heart"
               size="18px"
-              class="text-gray-500 group-hover:text-white cursor-pointer"
+              class=""
+              :class="{
+                'text-white': isFavorite(photoStore.selectedPhoto.id),
+                'text-gray-500 group-hover:text-black': !isFavorite(
+                  photoStore.selectedPhoto.id
+                ),
+              }"
             />
           </span>
           <span
-            class="group w-fit bg-slate-200 shadow-sm justify-center cursor-pointer mr-2 items-center sm:p-3 p-2 rounded-md hover:bg-black"
+            class="group w-fit bg-slate-200 h-fit shadow-sm justify-center cursor-pointer mr-2 items-center sm:p-3 p-2 rounded-md hover:bg-black"
           >
             <Icon
               name="mdi:download"
@@ -128,7 +144,7 @@ onUnmounted(() => {
           :key="photoStore.selectedPhoto.id"
           :src="photoStore.selectedPhoto.urls.regular"
           :alt="photoStore.selectedPhoto.description"
-          class="object-contain max-w-auto max-h-[90%] m-auto cursor-zoom-in"
+          class="object-contain max-w-auto max-h-[90%] pt-2 pb-8 sm:pt-0 lg:pb-2 m-auto cursor-zoom-in"
           :class="{ 'fullscreen-image': isFullScreen }"
           @click="toggleFullScreen"
           loading="lazy"

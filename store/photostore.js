@@ -10,6 +10,7 @@ export const usePhotoStore = defineStore("photoStore", () => {
   const page = ref(1);
   const selectedPhoto = ref(null);
   const query = ref("african"); //  Default query
+  const favorites = ref(new Set());
 
   const fetchPhotos = async (newQuery = null, reset = false) => {
     if (newQuery) {
@@ -78,6 +79,15 @@ export const usePhotoStore = defineStore("photoStore", () => {
       selectedPhoto.value = photos.value[currentIndex.value + 1];
     }
   };
+  const toggleFavorite = (photoId) => {
+    if (favorites.value.has(photoId)) {
+      favorites.value.delete(photoId);
+    } else {
+      favorites.value.add(photoId);
+    }
+  };
+
+  const isFavorite = (photoId) => favorites.value.has(photoId);
 
   return {
     photos,
@@ -90,5 +100,7 @@ export const usePhotoStore = defineStore("photoStore", () => {
     clearSelectedPhoto,
     prevPhoto,
     nextPhoto,
+    toggleFavorite,
+    isFavorite,
   };
 });
